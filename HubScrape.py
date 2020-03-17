@@ -42,7 +42,6 @@ class GetJobAds():
         job_ad_information = {}
         r = requests.get(f"https://thehub.io{url}")
         c = r.text
-        print(url)
         company_info = c.split('location:{country:')
         contacts = '{Country:'+company_info[1]
         job_ad_info = '{Country:'+company_info[2]
@@ -90,8 +89,7 @@ class GetJobAds():
         return jobs_to_csv
 
 
-
-j = GetJobAds()
-job_ad = j.get_all_data()
-data = j.data_to_data_frame(job_ad)
-print(data)
+if __name__ == "__main__":
+    j = GetJobAds()
+    job_ad = j.get_all_data()
+    data = j.data_to_data_frame(job_ad)
