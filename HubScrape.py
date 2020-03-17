@@ -1,6 +1,15 @@
 import requests
 from bs4 import BeautifulSoup
 import time
+import json
+
+
+def access_value(string, starting_point, ending_point):
+    try:
+        value = (string.split(starting_point)[1]).split(ending_point)[0]
+    except Exception:
+        value = None
+    return value
 
 def get_last_page(source):
     soup = BeautifulSoup(source, 'lxml')
@@ -11,7 +20,7 @@ def get_last_page(source):
 def get_all_urls():
     PATH_URL = "https://thehub.io/jobs?roles=backenddeveloper&roles=frontenddeveloper&roles=fullstackdeveloper&roles=androiddeveloper&roles=iosdeveloper&countryCode="
     urls = []
-    countries = ['DK', 'SE', 'NO']
+    countries = ['DK'] #'SE', 'NO'
     for country in countries:
         r = requests.get(f"{PATH_URL}{country}")
         c = r.text
@@ -25,8 +34,36 @@ def get_all_urls():
                 urls.append(a["href"])
     return urls
 
-BASE_URL = "https://thehub.io"
-PATH_URL = "https://thehub.io/jobs?roles=backenddeveloper&roles=frontenddeveloper&roles=fullstackdeveloper&roles=androiddeveloper&roles=iosdeveloper&countryCode=DK"
+def get_data_from_url(url):
+    job_ad_information = {}
+    r = requests.get(f"https://thehub.io/{url}")
+    c = r.text
+    company_info = c.split('location:{country:')
+    contacts = '{Country:'+company_info[1]
+    job_ad_info = '{Country:'+company_info[2]
+    country = access_value(contacts, '{Country:"', '"')
+    salary = access_value(contacts, 'salary:"', '"')
+    email = access_value(contacts, 'email:"', '"')
+    phone = access_value(contacts, 'phone:"', '"')
+    website = access_value(job_ad_info, 'website:"', '"')
+    title = access_value(job_ad_info, 'title:"', '"')
+    job_ad_created = access_value(job_ad_info, 'createdAt:"', '"')
+    job_ad_expiring = access_value(job_ad_info, 'expirationDate:"', '"')
 
-print(get_all_urls())
+    job_ad_information.update(
+        {
+            "country": country,
+            "title": title,
+            "salary": salary,
+            "website": website,
+            "email": email,
+            "phone": phone,
+            "Ad date": job_ad_created,
+            "Ad expiration date": job_ad_expiring
+
+        })
+    return job_ad_information
+#get_data_from_urls(get_all_urls())
+job_ad = get_data_from_url('jobs/5e6fff49ab17a30da473e6ef')
+print(job_ad)
 #<li class="page-item" role="presentation"><a aria-label="Go to last page" class="page-link nuxt-link-active" href="/jobs?roles=backenddeveloper&amp;roles=frontenddeveloper&amp;roles=fullstackdeveloper&amp;roles=androiddeveloper&a
