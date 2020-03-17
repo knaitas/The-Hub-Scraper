@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+import time
 
 def get_last_page(source):
     soup = BeautifulSoup(source, 'lxml')
@@ -8,17 +9,20 @@ def get_last_page(source):
     return int(last_page)
 
 def get_all_urls():
+    PATH_URL = "https://thehub.io/jobs?roles=backenddeveloper&roles=frontenddeveloper&roles=fullstackdeveloper&roles=androiddeveloper&roles=iosdeveloper&countryCode="
     urls = []
-    r = requests.get(PATH_URL)
-    c = r.text
-    last_page = get_last_page(c)
-    for i in range(1, last_page + 1):
-        r = requests.get(PATH_URL + "&page=" + str(i))
+    countries = ['DK', 'SE', 'NO']
+    for country in countries:
+        r = requests.get(f"{PATH_URL}{country}")
         c = r.text
-        soup = BeautifulSoup(c, 'lxml')
-        ahrefs = soup.find_all('a', {'class': 'card-job-find-list__link'})
-        for a in ahrefs:
-            urls.append(a["href"])
+        last_page = get_last_page(c)
+        for page in range(1, last_page + 1):
+            r = requests.get(f"{PATH_URL}&page={page}")
+            c = r.text
+            soup = BeautifulSoup(c, 'lxml')
+            ahrefs = soup.find_all('a', {'class': 'card-job-find-list__link'})
+            for a in ahrefs:
+                urls.append(a["href"])
     return urls
 
 BASE_URL = "https://thehub.io"
