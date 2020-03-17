@@ -1,13 +1,12 @@
 import requests
 from bs4 import BeautifulSoup
-import threading
-import queue
+import numpy as np
+import pandas as pd
 
-class GetJobAds(threading.Thread):
+class GetJobAds():
 
     def __init__(self):
-        threading.Thread.__init__(self)
-        self.queue = queue
+        pass
         
     def access_value(self, string, starting_point, ending_point):
         try:
@@ -25,7 +24,7 @@ class GetJobAds(threading.Thread):
     def get_all_urls(self):
         PATH_URL = "https://thehub.io/jobs?roles=backenddeveloper&roles=frontenddeveloper&roles=fullstackdeveloper&roles=androiddeveloper&roles=iosdeveloper&countryCode="
         urls = []
-        countries = ['DK'] #'SE', 'NO'
+        countries = ['DK', 'SE', 'NO']
         for country in countries:
             r = requests.get(f"{PATH_URL}{country}")
             c = r.text
@@ -41,11 +40,13 @@ class GetJobAds(threading.Thread):
     
     def get_data_from_url(self, url):
         job_ad_information = {}
-        r = requests.get(f"https://thehub.io/{url}")
+        r = requests.get(f"https://thehub.io{url}")
         c = r.text
+        print(url)
         company_info = c.split('location:{country:')
         contacts = '{Country:'+company_info[1]
         job_ad_info = '{Country:'+company_info[2]
+
         country = self.access_value(contacts, '{Country:"', '"')
         salary = self.access_value(contacts, 'salary:"', '"')
         email = self.access_value(contacts, 'email:"', '"')
@@ -60,15 +61,37 @@ class GetJobAds(threading.Thread):
                 "country": country,
                 "title": title,
                 "salary": salary,
-                "website": website.replace("\\u002F", "/"),
+                "website": website,
                 "email": email,
                 "phone": phone,
                 "Ad date": job_ad_created,
-                "Ad expiration date": job_ad_expiring
+                "Ad expiration date": job_ad_expiring,
+                "URL": f"https://thehub.io{url}"
     
             })
+
         return job_ad_information
 
+    def get_all_data(self):
+        job_ad_list = []
+        urls = self.get_all_urls()
+        for url in urls:
+            ad = self.get_data_from_url(url)
+            job_ad_list.append(ad)
+        return job_ad_list
+
+    def data_to_data_frame(self, data):
+        job_ads_frame = pd.DataFrame(data)
+        job_ads_frame.to_csv(index=False)
+        compressed_data = dict(method='zip',
+                               archive_name='job_ads.csv')
+        jobs_to_csv = job_ads_frame.to_csv('out.zip', index=False,
+                  compression=compressed_data)
+        return jobs_to_csv
+
+
+
 j = GetJobAds()
-job_ad = j.get_data_from_url('jobs/5e6fff49ab17a30da473e6ef')
-print(job_ad)
+job_ad = j.get_all_data()
+data = j.data_to_data_frame(job_ad)
+print(data)
