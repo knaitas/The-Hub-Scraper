@@ -44,7 +44,10 @@ class GetJobAds():
         c = r.text
         company_info = c.split('location:{country:')
         contacts = '{Country:'+company_info[1]
-        job_ad_info = '{Country:'+company_info[2]
+        try:
+            job_ad_info = '{Country:'+company_info[2]
+        except Exception:
+            job_ad_info = contacts
 
         country = self.access_value(contacts, '{Country:"', '"')
         salary = self.access_value(contacts, 'salary:"', '"')
@@ -84,9 +87,8 @@ class GetJobAds():
         job_ads_frame.to_csv(index=False)
         compressed_data = dict(method='zip',
                                archive_name='job_ads.csv')
-        jobs_to_csv = job_ads_frame.to_csv('out.zip', index=False,
+        job_ads_frame.to_csv('out.zip', index=False,
                   compression=compressed_data)
-        return jobs_to_csv
 
 
 if __name__ == "__main__":
